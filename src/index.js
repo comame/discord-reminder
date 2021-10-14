@@ -1,8 +1,8 @@
 // @ts-check
 
 const express = require('express')
-const { applicationCommandInteractionHandler } = require('./applicationCommandInteractionHandler')
-const { pingInteractionHandler } = require('./pingInteractionHandler')
+const { applicationCommandInteractionHandler } = require('./interaction/applicationCommand/applicationCommandInteractionHandler')
+const { pingInteractionHandler } = require('./interaction/pingInteractionHandler')
 const { signatureMiddlleware } = require('./signatureMiddleware')
 
 const app = express()
@@ -10,20 +10,33 @@ const app = express()
 app.use(signatureMiddlleware)
 
 app.post('/', async (req, res) => {
-    switch (req.body.type) {
-        // Ping
-        case 1: {
-            res.send(pingInteractionHandler(req.body))
-            break
+    try {
+        switch (req.body.type) {
+            // Ping
+            case 1: {
+                res.send(pingInteractionHandler(req.body))
+                break
+            }
+            // Application Command
+            case 2: {
+                res.send(await applicationCommandInteractionHandler(req.body))
+                break
+            }
+            default: {
+                res.sendStatus(400)
+            }
         }
-        // Application Command
-        case 2: {
-            res.send(await applicationCommandInteractionHandler(req.body))
-            break
-        }
-        default: {
-            res.sendStatus(400)
-        }
+    } catch (err) {
+        res.send({
+            type: 4, // CHANNEL_MESSAGE_WITH_SOURCE
+            data: {
+                allowed_mentions: {
+                    parse: [ 'users' ]
+                },
+                content: `<@${req.body.member.user.id}> Something went wrong :/`,
+                flags: 1 << 6
+            }
+        })
     }
 })
 

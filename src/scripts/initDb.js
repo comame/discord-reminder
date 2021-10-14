@@ -5,8 +5,10 @@ async function initDb() {
 
     await db.exec(`
         CREATE TABLE reminds (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             user TEXT,
             title TEXT,
+            channel TEXT,
             time INTEGER,
             everyone INTEGER
         )

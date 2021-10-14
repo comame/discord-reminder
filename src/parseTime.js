@@ -22,7 +22,9 @@ function parseTime(time) {
     const lastRegex = /^(?<lasthour>\d+)(?:hours|hors)|(?<lastminute>\d+)(?:minutes|mins)|(?<lastdate>\d+)days$/
 
     const isoStringRegex = /^(?<year>\d{4})-(?<month>\d{2})-(?<date>\d{2})T(?<hour>\d{2}):(?<minutes>\d{2}).+$/
-    let [ year, month, date, hours, minutes ] = new Date().toISOString().match(isoStringRegex).slice(1).map(it => parseInt(it, 10))
+    let [ year, month, date, hours, minutes ] = (/** @type {string[]} */ (new Date().toISOString().match(isoStringRegex)).slice(1).map(it => parseInt(it, 10)))
+
+    if (!year || !month || !date || !hours || !minutes) throw 'never'
 
     hours += 9 // JST Only
 
@@ -39,7 +41,7 @@ function parseTime(time) {
             // Do nothing
         } else if (tomorrow) {
             date += 1
-        } else {
+        } else if (lastdate) {
             date += parseInt(lastdate, 10)
         }
 
@@ -54,11 +56,11 @@ function parseTime(time) {
         } else if (midnight) {
             hours = 0
             date += 1
-        } else if (ap == 'am') {
+        } else if (hour && ap == 'am') {
             hours = parseInt(hour, 10)
-        } else if (ap == 'pm') {
+        } else if (hour && ap == 'pm') {
             hours = 12 + parseInt(hour, 10)
-        } else {
+        } else if (hour) {
             hours = parseInt(hour, 10)
         }
         minutes = 0
@@ -68,12 +70,12 @@ function parseTime(time) {
 
         const [ lasthour, lastminutes, lastdate ] = lastFound.slice(1).map(it => parseInt(it, 10))
 
-        if (!isNaN(lasthour)) {
+        if (lasthour && !Number.isNaN(lasthour)) {
             hours += lasthour
             minutes = 0
-        } else if (!isNaN(lastminutes)) {
+        } else if (lastminutes && !Number.isNaN(lastminutes)) {
             minutes += lastminutes
-        } else {
+        } else if (lastdate) {
             minutes = 0
             date += lastdate
         }
@@ -101,28 +103,29 @@ function normalizeDate(date) {
         copied.date += 1
         copied.hours += -24
     }
-    while ([4, 6, 9, 11].includes(copied.month) && copied.date >= 31) {
-        copied.month += 1
-        copied.date += -30
-    }
 
     let needMonthAdvance = true
     while (needMonthAdvance) {
         needMonthAdvance = false
+        while ([4, 6, 9, 11].includes(copied.month) && copied.date >= 31) {
+            copied.month += 1
+            copied.date += -30
+            needMonthAdvance = true
+        }
         while ([1, 3, 5, 7, 8, 10, 12].includes(copied.month) && copied.date >= 32) {
             copied.month += 1
             copied.date += -31
-            true
+            needMonthAdvance = true
         }
         while (copied.month == 2 && isLeapYear(copied.year) && copied.month >= 30) {
             copied.month += 1
             copied.date += -29
-            true
+            needMonthAdvance = true
         }
         while (copied.month == 2 && !isLeapYear(copied.year) && copied.month >= 29) {
             copied.month += 1
             copied.date += -28
-            true
+            needMonthAdvance = true
         }
     }
     while (copied.month >= 13) {
