@@ -27,6 +27,16 @@ const remindCommandHandler = async (data) => {
         })
     }
 
+    if (remindTime <= Date.now()) {
+        return ({
+            type: 4, // CHANNEL_MESSAGE_WITH_SOURCE
+            data: {
+                allowed_mentions: { parse: [ 'users' ] },
+                content: `<@${user}> You cannot set past reminder.`
+            }
+        })
+    }
+
     const content = everyone ?
         `@everyone I will remind you all to ${title} at ${new Date(remindTime).toLocaleString('ja-JP', { timeZone: 'JST' })}.` :
         `<@${user}> I will remind you to ${title} at ${new Date(remindTime).toLocaleString('ja-JP', { timeZone: 'JST' })}.`

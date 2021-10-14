@@ -1,3 +1,4 @@
+const { helpCommandHandler } = require('./helpCommandHandler')
 const { listRemindsCommandHandler } = require('./listRemindsCommandHandler')
 const { remindCommandHandler } = require('./remindCommandHandler')
 
@@ -9,6 +10,9 @@ const applicationCommandInteractionHandler = async (data) => {
         }
         case 'list-reminders': {
             return await listRemindsCommandHandler(data)
+        }
+        case 'help': {
+            return await helpCommandHandler(data)
         }
     }
 

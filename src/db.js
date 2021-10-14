@@ -43,21 +43,21 @@ async function insertRemind(remind) {
  * @returns {Promise<import('./tables').reminds[]>}
  */
 async function getRemindByUser(user) {
-    const remind = (await getDb()).all(`
+    const reminds = (await getDb()).all(`
         SELECT * from reminds where user = ?
     `, user)
-    return remind
+    return (await reminds).map(dbRemindToJson)
 }
 
 /**
- * @param {string} user
  * @param {number} time
  * @return {Promise<import('./tables').reminds[]>}
  */
-async function getPastRemindsByUser(user, time) {
-    return (await getDb()).all(`
-        select * from reminds where user = ? and time <= ?
-    `, user, time)
+async function getPastReminds(time) {
+    const reminds = (await getDb()).all(`
+        select * from reminds where time <= ?
+    `, time)
+    return (await reminds).map(dbRemindToJson)
 }
 
 /**
@@ -66,9 +66,10 @@ async function getPastRemindsByUser(user, time) {
  * @return {Promise<import('./tables').reminds[]>}
  */
 async function getUpcomingRemindsByUser(user, time) {
-    return (await getDb()).all(`
-        select * from reminds where user = ? and time > ?
+    const reminds = await (await getDb()).all(`
+        select * from reminds where (user = ? or everyone = 1) and time > ?
     `, user, time)
+    return reminds.map(dbRemindToJson)
 }
 
 /**
@@ -80,4 +81,15 @@ async function deleteRemind(id) {
     `, id)
 }
 
-module.exports = { getDb, insertRemind, getRemindByUser, getPastRemindsByUser, getUpcomingRemindsByUser, deleteRemind }
+/**
+ * @param {any} remind
+ * @returns {import('./tables').reminds}
+ */
+function dbRemindToJson(remind) {
+    return {
+        ...remind,
+        everyone: remind.everyone == 1
+    }
+}
+
+module.exports = { getDb, insertRemind, getRemindByUser, getPastReminds, getUpcomingRemindsByUser, deleteRemind }

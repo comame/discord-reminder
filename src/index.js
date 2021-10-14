@@ -3,6 +3,7 @@
 const express = require('express')
 const { applicationCommandInteractionHandler } = require('./interaction/applicationCommand/applicationCommandInteractionHandler')
 const { pingInteractionHandler } = require('./interaction/pingInteractionHandler')
+const { periodicReminder } = require('./remind')
 const { signatureMiddlleware } = require('./signatureMiddleware')
 
 const app = express()
@@ -27,6 +28,7 @@ app.post('/', async (req, res) => {
             }
         }
     } catch (err) {
+        console.log(err)
         res.send({
             type: 4, // CHANNEL_MESSAGE_WITH_SOURCE
             data: {
@@ -43,3 +45,7 @@ app.post('/', async (req, res) => {
 app.listen(process.env['PORT'] ?? 8080, () => {
     console.log(`Listening on port ${process.env['PORT'] ?? 8080}`)
 })
+
+setInterval(() => {
+    periodicReminder()
+}, 30 * 1000)

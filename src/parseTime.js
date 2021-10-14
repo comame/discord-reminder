@@ -1,12 +1,6 @@
 // @ts-check
 
 /**
- * date := today | tomorrow | (\d{4}[-/])?\d\d?[-/]\d\d? | \d+days
- * time := morning | noon | afternoon | night | midnight | \d\d?[(am)|(AM)|(pm)|(PM)]?
- * finally := <date>? <time>
- */
-
-/**
  * @typedef {{
  *  year: number, month: number, date: number, hours: number, minutes: number
  * }} myDate
@@ -17,9 +11,9 @@
  * @returns {number|null} UNIX Time
  */
 function parseTime(time) {
-    const exactRegex = /^(?:(?<today>today) |(?<tomorrow>tomorrow) |(?<lastdate>\d+)days )?(?:(?<morning>morning)|(?<noon>noon)|(?<afternoon>afternoon)|(?<night>night)|(?<midnight>midnight)|(?<hour>\d\d?)(?<ap>am|pm)?)$/
+    const exactRegex = /^(?:(?<today>today) |(?<tomorrow>tomorrow) |(?:(?<rmonth>\d\d?)\/(?<rdate>\d\d?) )|(?<lastdate>\d+)days )?(?:(?<morning>morning)|(?<noon>noon)|(?<afternoon>afternoon)|(?<night>night)|(?<midnight>midnight)|(?<hour>\d\d?)(?::(?<rmin>\d\d?))?(?<ap>am|pm)?)$/
 
-    const lastRegex = /^(?<lasthour>\d+)(?:hours|hors)|(?<lastminute>\d+)(?:minutes|mins)|(?<lastdate>\d+)days$/
+    const lastRegex = /^(?<lasthour>\d+)(?:hours|hrs|hour|hr)|(?<lastminute>\d+)(?:minutes|mins|min)|(?<lastdate>\d+)(?:days|day)$/
 
     const isoStringRegex = /^(?<year>\d{4})-(?<month>\d{2})-(?<date>\d{2})T(?<hour>\d{2}):(?<minutes>\d{2}).+$/
     let [ year, month, date, hours, minutes ] = (/** @type {string[]} */ (new Date().toISOString().match(isoStringRegex)).slice(1).map(it => parseInt(it, 10)))
@@ -32,9 +26,9 @@ function parseTime(time) {
 
     if (exactFound) {
         const [
-            today, tomorrow, lastdate, morning,
+            today, tomorrow, rmonth, rdate, lastdate, morning,
             noon, afternoon, night, midnight,
-            hour, ap
+            hour, rmin, ap
         ] = exactFound.slice(1)
 
         if (today) {
@@ -43,6 +37,9 @@ function parseTime(time) {
             date += 1
         } else if (lastdate) {
             date += parseInt(lastdate, 10)
+        } else if (rmonth && rdate) {
+            month = Number.parseInt(rmonth, 10)
+            date = Number.parseInt(rdate, 10)
         }
 
         if (morning) {
@@ -64,6 +61,10 @@ function parseTime(time) {
             hours = parseInt(hour, 10)
         }
         minutes = 0
+
+        if (hour && rmin) {
+            minutes = Number.parseInt(rmin, 10)
+        }
     } else {
         const lastFound = time.toLowerCase().match(lastRegex)
         if (!lastFound) return null

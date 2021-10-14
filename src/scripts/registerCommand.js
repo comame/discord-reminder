@@ -15,7 +15,7 @@ async function registerCommand() {
             required: true
         }, {
             name: 'time',
-            description: 'When to remind',
+            description: 'When to remind (/help for syntax)',
             type: 3, // string
             required: true
         }, {
