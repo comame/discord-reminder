@@ -25,6 +25,15 @@ async function registerCommand() {
             required: false
         }]
     }, {
+        name: 'delete-reminder',
+        description: 'Delete a reminder',
+        options: [{
+            name: 'id',
+            description: 'The ID of reminder',
+            type: 4, // integer
+            required: true
+        }]
+    }, {
         name: 'help',
         description: 'Get help'
     }, {
@@ -36,11 +45,19 @@ async function registerCommand() {
     const headers = [[ 'Authorization', `Bot ${DISCORD_BOT_TOKEN}` ]]
 
     commands.forEach(async body => {
-        const res = await request(url, 'POST', headers, body)
+        const res = await request(url, 'PUT', headers, body)
         console.log(res)
     })
+}
+
+async function listCommands() {
+    const url = `https://discord.com/api/v8/applications/897283486417846273/commands`
+    console.log(await request(url, 'get', [
+        [ 'Authorization', `Bot ${DISCORD_BOT_TOKEN}` ]
+    ], null))
 }
 
 module.exports = { registerCommand }
 
 registerCommand()
+// listCommands()
